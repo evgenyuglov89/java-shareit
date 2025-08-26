@@ -15,21 +15,21 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ItemNotFoundException.class)
     public ResponseEntity<Object> handleItemNotFound(ItemNotFoundException ex, WebRequest request) {
-        return buildResponseEntity(HttpStatus.NOT_FOUND, "Not Found", ex, request);
+        return buildResponseEntity(HttpStatus.NOT_FOUND, "Товар не найден", ex, request);
     }
 
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<Object> handleUserNotFound(UserNotFoundException ex, WebRequest request) {
-        return buildResponseEntity(HttpStatus.NOT_FOUND, "Not Found", ex, request);
+        return buildResponseEntity(HttpStatus.NOT_FOUND, "Пользователь не найден", ex, request);
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Object> handleGenericException(Exception ex, WebRequest request) {
-        return buildResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error", ex, request);
+        return buildResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR, "Ошибка сервера", ex, request);
     }
 
-    private ResponseEntity<Object> buildResponseEntity
-            (HttpStatus status, String error, Exception ex, WebRequest request) {
+    private ResponseEntity<Object> buildResponseEntity(HttpStatus status, String error, Exception ex,
+                                                       WebRequest request) {
         Map<String, Object> body = new HashMap<>();
         body.put("timestamp", LocalDateTime.now());
         body.put("status", status.value());
