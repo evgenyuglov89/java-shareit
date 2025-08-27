@@ -22,19 +22,15 @@ public class ItemController {
     }
 
     @PostMapping
-    public ResponseEntity<ItemDto> create(
-            @Valid
-            @RequestBody ItemDto itemDto,
-            @RequestHeader("X-Sharer-User-Id") Long userId) {
+    public ResponseEntity<ItemDto> create(@Valid @RequestBody ItemDto itemDto,
+                                          @RequestHeader("X-Sharer-User-Id") Long userId) {
         return ResponseEntity.ok(itemService.create(itemDto, userId));
     }
 
     @PatchMapping("/{itemId}")
-    public ResponseEntity<ItemDto> update(
-            @Valid
-            @PathVariable Long itemId,
-            @RequestBody ItemDto itemDto,
-            @RequestHeader("X-Sharer-User-Id") Long userId) {
+    public ResponseEntity<ItemDto> update(@Valid @PathVariable Long itemId,
+                                          @RequestBody ItemDto itemDto,
+                                          @RequestHeader("X-Sharer-User-Id") Long userId) {
         return ResponseEntity.ok(itemService.update(itemId, itemDto, userId));
     }
 
