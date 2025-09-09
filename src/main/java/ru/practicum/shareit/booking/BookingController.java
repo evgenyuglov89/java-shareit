@@ -22,6 +22,7 @@ public class BookingController {
     public BookingController(BookingService bookingService) {
         this.bookingService = bookingService;
     }
+
     @PostMapping
     public BookingDto create(@RequestHeader("X-Sharer-User-Id") long userId, @RequestBody @Valid BookingCreateDto dto) {
         return bookingService.create(userId, dto);
