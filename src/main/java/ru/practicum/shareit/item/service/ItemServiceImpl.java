@@ -1,80 +1,89 @@
 package ru.practicum.shareit.item.service;
 
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
+import ru.practicum.shareit.booking.service.BookingAggregatorService;
 import ru.practicum.shareit.exception.ItemNotFoundException;
-import ru.practicum.shareit.exception.UserNotFoundException;
+import ru.practicum.shareit.item.dto.CommentCreateDto;
+import ru.practicum.shareit.item.dto.CommentDto;
+import ru.practicum.shareit.item.dto.ItemDetailsDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.user.dto.UserDto;
-import ru.practicum.shareit.user.model.User;
+import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.service.UserService;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicLong;
 
+@Validated
 @Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class ItemServiceImpl implements ItemService {
-    private final Map<Long, Item> storage = new HashMap<>();
-    private final AtomicLong idGenerator = new AtomicLong(1);
+
     private final UserService userService;
+    private final ItemRepository itemRepository;
+    private final BookingAggregatorService bookingAggregatorService;
+    private final CommentAggregatorService commentAggregatorService;
+    private final ItemMapper itemMapper;
+    private final CommentService commentService;
 
-    public ItemServiceImpl(UserService userService) {
-        this.userService = userService;
+    @Override
+    @Transactional
+    public ItemDto create(ItemDto itemDto, Long userId) {
+        userService.getById(userId);
+
+        Item item = itemMapper.mapToEntity(itemDto);
+        item.setOwnerId(userId);
+
+        itemRepository.save(item);
+        return itemMapper.mapToDto(item);
     }
 
     @Override
-    public ItemDto create(ItemDto dto, Long ownerId) {
-        UserDto owner = userService.getById(ownerId);
+    @Transactional
+    public @Valid ItemDto update(Long itemId, ItemDto itemDto, Long userId) {
+        Item item = itemRepository.findById(itemId)
+                .orElseThrow(() -> new ItemNotFoundException("Товар не найден"));
 
-        if (owner == null) {
-            throw new UserNotFoundException("Владелец с id " + ownerId + " не найден");
+        if (!userId.equals(item.getOwnerId())) {
+            throw new ItemNotFoundException(
+                    "Товар с id:" + itemId + " не принадлежит пользователю с id:" + userId
+            );
         }
 
-        Item item = ItemMapper.toItem(dto, new User(ownerId, null, null), null);
-        item.setId(idGenerator.getAndIncrement());
-        storage.put(item.getId(), item);
-        return ItemMapper.toItemDto(item);
+        applyUpdates(item, itemDto);
+        return itemMapper.mapToDto(item);
     }
 
     @Override
-    public ItemDto update(Long itemId, ItemDto dto, Long ownerId) {
-        Item item = storage.get(itemId);
-        if (item == null) {
-            throw new ItemNotFoundException("Товар не найден");
-        }
+    public ItemDetailsDto getById(Long itemId, Long userId) {
+        userService.getById(userId);
 
-        if (!Objects.equals(item.getOwner().getId(), ownerId)) {
-            throw new UserNotFoundException("Только владелец может редактировать товар");
-        }
+        Item item = itemRepository.findById(itemId)
+                .orElseThrow(() -> new ItemNotFoundException("Товар не найден"));
 
-        if (dto.getName() != null) {
-            item.setName(dto.getName());
-        }
-        if (dto.getDescription() != null) {
-            item.setDescription(dto.getDescription());
-        }
-        item.setAvailable(dto.getAvailable());
+        ItemDetailsDto dto = bookingAggregatorService.addBookings(List.of(item)).get(0);
+        dto = commentAggregatorService.addComments(dto);
 
-        return ItemMapper.toItemDto(item);
+        if (!userId.equals(item.getOwnerId())) {
+            dto.setLastBooking(null);
+            dto.setNextBooking(null);
+        }
+        return dto;
     }
 
     @Override
-    public ItemDto getById(Long itemId) {
-        Item item = storage.get(itemId);
-        if (item == null) {
-            throw new ItemNotFoundException("Товар не найден");
-        }
+    public List<ItemDetailsDto> getAllByOwner(Long ownerId) {
+        userService.getById(ownerId);
 
-        return ItemMapper.toItemDto(item);
-    }
+        List<Item> items = itemRepository.findAllByOwnerId(ownerId);
 
-    @Override
-    public List<ItemDto> getAllByOwner(Long ownerId) {
-        return storage.values().stream()
-                .filter(i -> i.getOwner().getId().equals(ownerId))
-                .map(ItemMapper::toItemDto)
-                .toList();
+        List<ItemDetailsDto> itemsWithBookings = bookingAggregatorService.addBookings(items);
+        return commentAggregatorService.addComments(itemsWithBookings);
     }
 
     @Override
@@ -82,12 +91,25 @@ public class ItemServiceImpl implements ItemService {
         if (text == null || text.isBlank()) {
             return List.of();
         }
-        String lower = text.toLowerCase();
 
-        return storage.values().stream()
-                .filter(item -> Boolean.TRUE.equals(item.getAvailable()) && item.getName() != null)
-                .filter(item -> item.getName().toLowerCase().contains(lower))
-                .map(ItemMapper::toItemDto)
-                .toList();
+        return itemMapper.mapToDtoList(itemRepository.findAvailableByText(text.toLowerCase()));
+    }
+
+    @Override
+    @Transactional
+    public CommentDto addComment(Long userId, Long itemId, CommentCreateDto commentDto) {
+        return commentService.addComment(userId, itemId, commentDto);
+    }
+
+    private void applyUpdates(Item item, ItemDto itemDto) {
+        if (itemDto.getName() != null && !itemDto.getName().isBlank()) {
+            item.setName(itemDto.getName());
+        }
+        if (itemDto.getDescription() != null && !itemDto.getDescription().isBlank()) {
+            item.setDescription(itemDto.getDescription());
+        }
+        if (itemDto.getAvailable() != null) {
+            item.setAvailable(itemDto.getAvailable());
+        }
     }
 }

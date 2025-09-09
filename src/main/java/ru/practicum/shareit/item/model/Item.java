@@ -1,5 +1,6 @@
 package ru.practicum.shareit.item.model;
 
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -7,8 +8,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import ru.practicum.shareit.request.ItemRequest;
-import ru.practicum.shareit.user.model.User;
 
 /**
  * TODO Sprint add-controllers.
@@ -17,7 +16,11 @@ import ru.practicum.shareit.user.model.User;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Entity
+@Table(name = "items", schema = "public")
 public class Item {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @NotBlank(message = "Название не может быть пустым")
@@ -28,9 +31,12 @@ public class Item {
     private String description;
 
     @NotNull(message = "Поле доступности обязательно")
+    @Column(name = "is_available")
     private Boolean available;
 
-    private User owner;
+    @Column(name = "owner_id")
+    private Long ownerId;
 
-    private ItemRequest request;
+    @Column(name = "request_id")
+    private Long requestId;
 }
