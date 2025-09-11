@@ -1,28 +1,22 @@
 package ru.practicum.shareit.user.model;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
-import jakarta.validation.constraints.Email;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.persistence.*;
+import lombok.*;
 
-/**
- * TODO Sprint add-controllers.
- */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Entity
+@Table(name = "users")
 public class User {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "Имя не может быть пустым")
-    @Size(max = 50, message = "Имя должно содержать не более 50 символов")
+    @Column(name = "name", nullable = false)
     private String name;
 
-    @NotBlank(message = "Email обязателен")
-    @Email(message = "Некорректный формат email")
+    @Column(name = "email", nullable = false, unique = true)
     private String email;
 }
