@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.validation.annotation.Validated;
 import ru.practicum.shareit.booking.dto.BookingCreateDto;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.mapper.BookingMapper;
@@ -24,7 +23,6 @@ import ru.practicum.shareit.user.repository.UserRepository;
 import java.util.List;
 import java.util.Objects;
 
-@Validated
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)

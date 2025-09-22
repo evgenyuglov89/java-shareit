@@ -1,6 +1,5 @@
 package ru.practicum.shareit.booking;
 
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.booking.dto.BookingCreateDto;
 import ru.practicum.shareit.booking.dto.BookingDto;
@@ -12,7 +11,6 @@ import java.util.List;
 /**
  * TODO Sprint add-bookings.
  */
-@Validated
 @RestController
 @RequestMapping(path = "/bookings")
 public class BookingController {

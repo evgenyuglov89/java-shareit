@@ -3,7 +3,6 @@ package ru.practicum.shareit.item.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.validation.annotation.Validated;
 import ru.practicum.shareit.booking.service.BookingAggregatorService;
 import ru.practicum.shareit.exception.ItemNotFoundException;
 import ru.practicum.shareit.item.dto.CommentCreateDto;
@@ -17,7 +16,6 @@ import ru.practicum.shareit.user.service.UserService;
 
 import java.util.*;
 
-@Validated
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
